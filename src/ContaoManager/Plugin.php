@@ -27,8 +27,7 @@ class Plugin implements BundlePluginInterface
     {
         return [
             BundleConfig::create(MarkocupicContaoCustomGlobalOperation::class)
-                ->setLoadAfter([ContaoCoreBundle::class])
-                ->setLoadAfter([ContaoCalendarBundle::class]),
+                ->setLoadAfter([ContaoCoreBundle::class]),
         ];
     }
 }
