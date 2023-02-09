@@ -1,0 +1,12 @@
+# config/services.yaml
+services:
+    _defaults:
+        autowire: true
+        autoconfigure: true
+        public: false
+        bind:
+            #$router: '@router'
+
+    Markocupic\ContaoCustomGlobalOperation\:
+        resource: ../src/
+        exclude: ../src/{DependencyInjection,Model}
