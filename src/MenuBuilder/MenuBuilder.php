@@ -5,7 +5,7 @@ declare(strict_types=1);
 /*
  * This file is part of Contao Custom Global Operation.
  *
- * (c) Marko Cupic 2023 <m.cupic@gmx.ch>
+ * (c) Marko Cupic 2024 <m.cupic@gmx.ch>
  * @license MIT
  * For the full copyright and license information,
  * please view the LICENSE file that was distributed with this source code.
@@ -53,7 +53,7 @@ class MenuBuilder
         return $attributes;
     }
 
-    private function generate(): string
+    protected function generate(): string
     {
         $markup = '';
 
@@ -103,7 +103,7 @@ class MenuBuilder
         return $markup;
     }
 
-    private function initialize(): void
+    protected function initialize(): void
     {
         foreach ($this->globOps as $globOp) {
             $menuItem = $this->dca['list']['global_operations'][$globOp['name']] ?? null;

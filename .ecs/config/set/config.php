@@ -17,7 +17,7 @@ return static function (ECSConfig $ecsConfig): void {
     ]);
 
     $ecsConfig->ruleWithConfiguration(HeaderCommentFixer::class, [
-        'header' => "This file is part of Contao Custom Global Operation.\n\n(c) Marko Cupic 2023 <m.cupic@gmx.ch>\n@license MIT\nFor the full copyright and license information,\nplease view the LICENSE file that was distributed with this source code.\n@link https://github.com/markocupic/contao-custom-global-operation",
+        'header' => "This file is part of Contao Custom Global Operation.\n\n(c) Marko Cupic 2024 <m.cupic@gmx.ch>\n@license MIT\nFor the full copyright and license information,\nplease view the LICENSE file that was distributed with this source code.\n@link https://github.com/markocupic/contao-custom-global-operation",
     ]);
 
     $ecsConfig->parallel();
