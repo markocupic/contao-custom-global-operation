@@ -5,7 +5,7 @@ declare(strict_types=1);
 /*
  * This file is part of Contao Custom Global Operation.
  *
- * (c) Marko Cupic 2024 <m.cupic@gmx.ch>
+ * (c) Marko Cupic <m.cupic@gmx.ch>
  * @license MIT
  * For the full copyright and license information,
  * please view the LICENSE file that was distributed with this source code.
@@ -16,6 +16,7 @@ namespace Markocupic\ContaoCustomGlobalOperation\EventListener;
 
 use Contao\CoreBundle\DependencyInjection\Attribute\AsHook;
 use Markocupic\ContaoCustomGlobalOperation\MenuBuilder\MenuBuilder;
+use Markocupic\ContaoCustomGlobalOperation\Util\DomUtil;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Twig\Environment;
 
@@ -23,7 +24,9 @@ use Twig\Environment;
 class ParseBackendTemplateListener
 {
     private RequestStack $requestStack;
+
     private Environment $twig;
+
     private MenuBuilder $menuBuilder;
 
     public function __construct(RequestStack $requestStack, Environment $twig, MenuBuilder $menuBuilder)
@@ -49,25 +52,32 @@ class ParseBackendTemplateListener
             $strTable = $request->query->get('table');
 
             if ($strTable) {
-                $regexp = '<a\\s[^>]*href="([^"]*)"[^>]*data-customglobop="([^"]*)"[^>]*>(.*)<\\/a>';
-                preg_match_all("/$regexp/siU", $buffer, $matches);
+                preg_match_all(
+                    '/<a\b[^>]*\bdata-customglobop\b[^>]*>(.*?)<\/a>/is',
+                    $buffer,
+                    $matches,
+                );
 
-                if ($matches) {
-                    $arrGlobOp = [];
+                if (empty($matches[0])) {
+                    return $buffer;
+                }
 
-                    foreach (array_keys($matches[0]) as $i) {
-                        $arrGlobOp[] = [
-                            'html' => $matches[0][$i],
-                            'href' => $matches[1][$i],
-                            'name' => $matches[2][$i],
-                            'label' => $matches[3][$i],
-                        ];
+                $arrGlobOp = [];
 
-                        // Remove original link from global operation list
-                        $buffer = str_replace($matches[0][$i], '', $buffer);
-                    }
+                foreach ($matches[0] as $html) {
+                    $attributes = DomUtil::getAttributesFromTag($html);
+                    $arrGlobOp[] = [
+                        'html' => $html,
+                        'href' => $attributes['href'] ?? '',
+                        'name' => $attributes['data-customglobop'] ?? '',
+                        'label' => DomUtil::getNodeValueFromTag($html),
+                    ];
 
-                    // Inject menu
+                    $buffer = str_replace($html, '', $buffer);
+                }
+
+                // Inject menu
+                if (!empty($arrGlobOp)) {
                     $buffer = $this->injectMenu($strTable, $arrGlobOp, $buffer);
                 }
             }
@@ -84,18 +94,15 @@ class ParseBackendTemplateListener
             return $buffer;
         }
 
-        $strMenus = $this->menuBuilder->generateMenus($strTable, $globOp, $dca);
+        $strMenus = $this->menuBuilder->generateMenus($globOp, $dca);
 
         if (!\strlen($strMenus)) {
             return $buffer;
         }
 
-        $strMenuContainer = $this->twig->render(
-            '@MarkocupicContaoCustomGlobalOperation/be_nav_container.html.twig',
-            [
-                'menu' => $strMenus,
-            ]
-        );
+        $strMenuContainer = $this->twig->render('@MarkocupicContaoCustomGlobalOperation/be_nav_container.html.twig', [
+            'menu' => $strMenus,
+        ]);
 
         return str_replace('<div class="tl_listing_container', $strMenuContainer.'<div class="tl_listing_container', $buffer);
     }

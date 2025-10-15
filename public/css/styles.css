@@ -1,51 +1,38 @@
 #tl_custom_glob_op_nav_container {
     padding: 12px 15px;
-
-    & .custom-glob-op-menu {
-        border-top: 1px solid var(--border);
-        margin: 4px -4px;
-        display: flex;
-        justify-content: flex-end;
-        align-content: flex-start;
-        flex-wrap: wrap;
-
-        & .custom-glob-op-menu-item {
-            margin: 5px 0;
-            box-sizing: border-box;
-            padding: 4px 4px;
-            display: block;
-            text-align: left;
-            box-sizing: border-box;
-
-            & a {
-                padding: 8px 10px 8px 30px;
-                margin-left: 0;
-                display: block;
-                text-align: left;
-                /*background-size: auto 16px;*/
-                background-position-x: .5rem;
-                border: 1px solid transparent;
-                border-radius: 2px;
-                transition: background-color .25s ease-in-out;
-            }
-
-            & a:hover {
-                border: 1px solid #f9f9f9;
-                background-color: #f9f9f9;
-            }
-        }
-    }
 }
 
-html[data-color-scheme="dark"] {
-    & #tl_custom_glob_op_nav_container {
-        & .custom-glob-op-menu {
-            & .custom-glob-op-menu-item {
-                & a:hover {
-                    border: 1px solid var(--border);
-                    background-color: #232529;
-                }
-            }
-        }
-    }
+#tl_custom_glob_op_nav_container .custom-glob-op-menu {
+    border-top: 1px solid #f3f3f3;
+    margin: 4px -4px;
+    display: flex;
+    justify-content: flex-end;
+    align-content: flex-start;
+    flex-wrap: wrap;
+}
+
+#tl_custom_glob_op_nav_container .custom-glob-op-menu .custom-glob-op-menu-item {
+    margin: 5px 0;
+    box-sizing: border-box;
+    padding: 4px 4px;
+    display: block;
+    text-align: left;
+    box-sizing: border-box;
+}
+
+#tl_custom_glob_op_nav_container .custom-glob-op-menu .custom-glob-op-menu-item a {
+    padding: 8px 10px 8px 30px;
+    margin-left: 0;
+    display: block;
+    text-align: left;
+    /*background-size: auto 16px;*/
+    background-position-x: .5rem;
+    border: 1px solid transparent;
+    border-radius: 2px;
+    transition: background-color .25s ease-in-out;
+}
+
+#tl_custom_glob_op_nav_container .custom-glob-op-menu .custom-glob-op-menu-item a:hover {
+    border: 1px solid #f9f9f9;
+    background-color: #f9f9f9;
 }
