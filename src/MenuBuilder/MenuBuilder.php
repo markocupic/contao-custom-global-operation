@@ -17,23 +17,43 @@ namespace Markocupic\ContaoCustomGlobalOperation\MenuBuilder;
 use Knp\Menu\Matcher\Matcher;
 use Knp\Menu\MenuFactory;
 use Knp\Menu\Renderer\ListRenderer;
-use Markocupic\ContaoCustomGlobalOperation\Util\DomUtil;
 
 class MenuBuilder
 {
+    private ?string $strTable = null;
+
     private ?array $globOps = null;
 
     private ?array $dca = null;
 
     private ?array $arrMenus = null;
 
-    public function generateMenus(array $globOps, array $dca): string
+    public function generateMenus(string $strTable, array $globOps, array $dca): string
     {
+        $this->strTable = $strTable;
         $this->globOps = $globOps;
         $this->dca = $dca;
         $this->initialize();
 
         return $this->generate();
+    }
+
+    public function getAttrFromHtml(string $html): array
+    {
+        $dom = new \DOMDocument();
+        $dom->loadHTML($html);
+        $attributes = [];
+        $p = $dom->getElementsByTagName('a')->item(0);
+
+        if ($p->hasAttributes()) {
+            foreach ($p->attributes as $attr) {
+                $name = $attr->nodeName;
+                $value = $attr->nodeValue;
+                $attributes[$name] = utf8_decode((string) $value);
+            }
+        }
+
+        return $attributes;
     }
 
     private function generate(): string
@@ -103,7 +123,7 @@ class MenuBuilder
                 $v['href'] = $globOp['href'];
                 $v['label'] = $globOp['label'];
                 $v['sorting'] = !isset($v['custom_glob_op_options']['sorting']) || !\is_int($v['custom_glob_op_options']['sorting']) ? $sorting : $v['custom_glob_op_options']['sorting'];
-                $v['attributes'] = DomUtil::getAttributesFromTag($globOp['html']);
+                $v['attributes'] = $this->getAttrFromHtml($globOp['html']);
 
                 if (!isset($this->arrMenus[$v['custom_glob_op_group']]) || !\is_array($this->arrMenus[$v['custom_glob_op_group']])) {
                     $this->arrMenus[$v['custom_glob_op_group']] = [];

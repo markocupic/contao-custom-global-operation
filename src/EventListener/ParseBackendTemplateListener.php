@@ -16,7 +16,6 @@ namespace Markocupic\ContaoCustomGlobalOperation\EventListener;
 
 use Contao\CoreBundle\DependencyInjection\Attribute\AsHook;
 use Markocupic\ContaoCustomGlobalOperation\MenuBuilder\MenuBuilder;
-use Markocupic\ContaoCustomGlobalOperation\Util\DomUtil;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Twig\Environment;
 
@@ -52,32 +51,25 @@ class ParseBackendTemplateListener
             $strTable = $request->query->get('table');
 
             if ($strTable) {
-                preg_match_all(
-                    '/<a\b[^>]*\bdata-customglobop\b[^>]*>(.*?)<\/a>/is',
-                    $buffer,
-                    $matches,
-                );
+                $regexp = '<a\\s[^>]*href="([^"]*)"[^>]*data-customglobop="([^"]*)"[^>]*>(.*)<\\/a>';
+                preg_match_all("/$regexp/siU", $buffer, $matches);
 
-                if (empty($matches[0])) {
-                    return $buffer;
-                }
+                if ($matches) {
+                    $arrGlobOp = [];
 
-                $arrGlobOp = [];
+                    foreach (array_keys($matches[0]) as $i) {
+                        $arrGlobOp[] = [
+                            'html' => $matches[0][$i],
+                            'href' => $matches[1][$i],
+                            'name' => $matches[2][$i],
+                            'label' => $matches[3][$i],
+                        ];
 
-                foreach ($matches[0] as $html) {
-                    $attributes = DomUtil::getAttributesFromTag($html);
-                    $arrGlobOp[] = [
-                        'html' => $html,
-                        'href' => $attributes['href'] ?? '',
-                        'name' => $attributes['data-customglobop'] ?? '',
-                        'label' => DomUtil::getNodeValueFromTag($html),
-                    ];
+                        // Remove original link from global operation list
+                        $buffer = str_replace($matches[0][$i], '', $buffer);
+                    }
 
-                    $buffer = str_replace($html, '', $buffer);
-                }
-
-                // Inject menu
-                if (!empty($arrGlobOp)) {
+                    // Inject menu
                     $buffer = $this->injectMenu($strTable, $arrGlobOp, $buffer);
                 }
             }
@@ -94,7 +86,7 @@ class ParseBackendTemplateListener
             return $buffer;
         }
 
-        $strMenus = $this->menuBuilder->generateMenus($globOp, $dca);
+        $strMenus = $this->menuBuilder->generateMenus($strTable, $globOp, $dca);
 
         if (!\strlen($strMenus)) {
             return $buffer;

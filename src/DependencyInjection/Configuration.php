@@ -27,15 +27,15 @@ class Configuration implements ConfigurationInterface
 
         $treeBuilder->getRootNode()
             ->children()
-            ->arrayNode('foo')
-            ->addDefaultsIfNotSet()
-            ->children()
-            ->scalarNode('bar')
-            ->cannotBeEmpty()
-            ->defaultValue('***')
-            ->end()
-            ->end()
-            ->end() // end foo
+                ->arrayNode('foo')
+                    ->addDefaultsIfNotSet()
+                    ->children()
+                        ->scalarNode('bar')
+                            ->cannotBeEmpty()
+                            ->defaultValue('***')
+                        ->end()
+                    ->end()
+                ->end() // end foo
             ->end()
         ;
 

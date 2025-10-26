@@ -15,17 +15,17 @@ declare(strict_types=1);
 namespace Markocupic\ContaoCustomGlobalOperation\EventSubscriber;
 
 use Contao\CoreBundle\Routing\ScopeMatcher;
+use Symfony\Component\Asset\Packages;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\HttpKernel\Event\RequestEvent;
 use Symfony\Component\HttpKernel\KernelEvents;
 
 class BackendAssetsSubscriber implements EventSubscriberInterface
 {
-    protected ScopeMatcher $scopeMatcher;
-
-    public function __construct(ScopeMatcher $scopeMatcher)
-    {
-        $this->scopeMatcher = $scopeMatcher;
+    public function __construct(
+        private readonly ScopeMatcher $scopeMatcher,
+        private readonly Packages $packages,
+    ) {
     }
 
     public static function getSubscribedEvents()
@@ -39,7 +39,7 @@ class BackendAssetsSubscriber implements EventSubscriberInterface
 
         if ($this->scopeMatcher->isBackendRequest($request)) {
             // Add Backend CSS
-            $GLOBALS['TL_CSS'][] = 'bundles/markocupiccontaocustomglobaloperation/css/styles.css';
+            $GLOBALS['TL_CSS'][] = $this->packages->getUrl('css/backend/styles.css', 'markocupic_contao_custom_global_operation');
         }
     }
 }
