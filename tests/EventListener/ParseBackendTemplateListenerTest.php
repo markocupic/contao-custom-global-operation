@@ -52,7 +52,7 @@ class ParseBackendTemplateListenerTest extends TestCase
         $this->assertStringContainsString('<div class="nav">', $result);
         $this->assertSame(1, substr_count($result, 'key=export'));
         $this->assertSame(1, substr_count($result, 'key=import'));
-        $this->assertMatchesRegularExpression('/key=import.*key=export/s', $result, 'Sorted by the "sorting" option (descending)');
+        $this->assertMatchesRegularExpression('/key=export.*key=import/s', $result, 'Sorted by the "sorting" option (higher values first)');
         $this->assertMatchesRegularExpression('/<div class="nav">\s*<ul class="custom-glob-op-menu" data-name="tools">/', $result);
         $this->assertStringNotContainsString('&amp;amp;', $result);
     }
