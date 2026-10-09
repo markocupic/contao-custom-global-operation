@@ -37,54 +37,56 @@ class ParseBackendTemplateListener
 
     public function __invoke(string $buffer, string $template): string
     {
-        $request = $this->requestStack->getCurrentRequest();
-
-        $strTable = $request->query->get('table');
-
-        if ('be_main' === $template && $strTable) {
-            $dca = $GLOBALS['TL_DCA'][$strTable];
-
-            if (empty($dca) || !\is_array($dca)) {
-                return $buffer;
-            }
-
-            $strTable = $request->query->get('table');
-
-            if ($strTable) {
-                $regexp = '<a\\s[^>]*href="([^"]*)"[^>]*data-customglobop="([^"]*)"[^>]*>(.*)<\\/a>';
-                preg_match_all("/$regexp/siU", $buffer, $matches);
-
-                if ($matches) {
-                    $arrGlobOp = [];
-
-                    foreach (array_keys($matches[0]) as $i) {
-                        $arrGlobOp[] = [
-                            'html' => $matches[0][$i],
-                            'href' => $matches[1][$i],
-                            'name' => $matches[2][$i],
-                            'label' => $matches[3][$i],
-                        ];
-
-                        // Remove original link from global operation list
-                        $buffer = str_replace($matches[0][$i], '', $buffer);
-                    }
-
-                    // Inject menu
-                    $buffer = $this->injectMenu($strTable, $arrGlobOp, $buffer);
-                }
-            }
+        if ('be_main' !== $template) {
+            return $buffer;
         }
 
-        return $buffer;
+        $strTable = (string) $this->requestStack->getCurrentRequest()?->query->get('table');
+
+        if ('' === $strTable || !\is_array($GLOBALS['TL_DCA'][$strTable] ?? null)) {
+            return $buffer;
+        }
+
+        // Find the links of the custom global operations. The attribute order differs
+        // between Contao 5.3 and Contao 6, and in Contao 6 a link can be rendered twice
+        // (in the button bar and in the operations menu).
+        $regexp = '/<a\\s[^>]*'.LoadDataContainerListener::DATA_ATTRIBUTE.'="([^"]*)"[^>]*>(.*?)<\\/a>/si';
+
+        if (!preg_match_all($regexp, $buffer, $matches, PREG_SET_ORDER)) {
+            return $buffer;
+        }
+
+        $arrGlobOp = [];
+
+        foreach ($matches as [$html, $name, $innerHtml]) {
+            $arrGlobOp[$name] ??= [
+                'html' => $html,
+                'name' => $name,
+                'label' => trim(html_entity_decode(strip_tags($innerHtml), ENT_QUOTES | ENT_HTML5)),
+            ];
+
+            // Remove the original link (and its list item) from the global operations
+            $buffer = $this->removeLink($html, $buffer);
+        }
+
+        return $this->injectMenu($strTable, array_values($arrGlobOp), $buffer);
+    }
+
+    private function removeLink(string $html, string $buffer): string
+    {
+        $listItem = '/<li\\b[^>]*>\\s*'.preg_quote($html, '/').'\\s*<\\/li>/s';
+        $result = preg_replace($listItem, '', $buffer, -1, $count);
+
+        if (null !== $result && $count > 0) {
+            return $result;
+        }
+
+        return str_replace($html, '', $buffer);
     }
 
     private function injectMenu(string $strTable, array $globOp, string $buffer): string
     {
         $dca = $GLOBALS['TL_DCA'][$strTable];
-
-        if (empty($dca) || !\is_array($dca)) {
-            return $buffer;
-        }
 
         $strMenus = $this->menuBuilder->generateMenus($strTable, $globOp, $dca);
 

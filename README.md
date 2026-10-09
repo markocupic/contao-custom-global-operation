@@ -6,6 +6,11 @@ Falls ein Contao Backend Modul über viele globale Operationen verfügt, kann di
 
 Hier hilft diese Erweiterung für Contao. Die verschiedenen Menupunkte lassen sich thematisch grupieren und geordnet ausgeben.
 
+## Voraussetzungen
+
+- Contao 5.3 oder höher, inklusive Contao 6
+- PHP 8.3 oder höher
+
 ![Alt text](docs/images/img.png?raw=true "logo")
 
 ## Konfiguration
@@ -21,13 +26,12 @@ Mit dem Array `custom_glob_op_options => []` kann der Menupunnkt noch zusätzlic
         'all'                          => [
             'href'       => 'act=select',
             'class'      => 'header_edit_all',
-            'attributes' => 'onclick="Backend.getScrollOffset()" accesskey="e"',
+            'attributes' => 'accesskey="e"',
         ],
         'glob_operation_one' => [
             'href'                   => 'action=glob_operation_one',
             'class'                  => 'glob_operation_one',
             'icon'                   => 'bundles/myawesomecontaobundle/icons/file-word-regular.svg',
-            'attributes'             => 'onclick="Backend.getScrollOffset()" accesskey="e"',
             'custom_glob_op'         => true,
             'custom_glob_op_options' => ['add_to_menu_group' => 'my_menu_one', 'sorting' => 10],
         ],
@@ -35,7 +39,6 @@ Mit dem Array `custom_glob_op_options => []` kann der Menupunnkt noch zusätzlic
             'href'                   => 'action=glob_operation_two',
             'class'                  => 'glob_operation_one',
             'icon'                   => 'bundles/myawesomecontaobundle/icons/file-excel-regular.svg',
-            'attributes'             => 'onclick="Backend.getScrollOffset()" accesskey="e"',
             'custom_glob_op'         => true,
             'custom_glob_op_options' => ['add_to_menu_group' => 'my_menu_one', 'sorting' => 20],
         ],
@@ -43,7 +46,6 @@ Mit dem Array `custom_glob_op_options => []` kann der Menupunnkt noch zusätzlic
             'href'                   => 'action=glob_operation_three',
             'class'                  => 'glob_operation_one',
             'icon'                   => 'bundles/myawesomecontaobundle/icons/file-pdf-regular.svg',
-            'attributes'             => 'onclick="Backend.getScrollOffset()" accesskey="e"',
             'custom_glob_op'         => true,
             'custom_glob_op_options' => ['add_to_menu_group' => 'my_menu_two', 'sorting' => 30],
         ],
