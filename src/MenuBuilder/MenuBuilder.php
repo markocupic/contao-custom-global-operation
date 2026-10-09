@@ -33,6 +33,7 @@ class MenuBuilder
         $this->strTable = $strTable;
         $this->globOps = $globOps;
         $this->dca = $dca;
+        $this->arrMenus = [];
         $this->initialize();
 
         return $this->generate();
@@ -41,16 +42,19 @@ class MenuBuilder
     public function getAttrFromHtml(string $html): array
     {
         $dom = new \DOMDocument();
-        $dom->loadHTML($html);
-        $attributes = [];
-        $p = $dom->getElementsByTagName('a')->item(0);
 
-        if ($p->hasAttributes()) {
-            foreach ($p->attributes as $attr) {
-                $name = $attr->nodeName;
-                $value = $attr->nodeValue;
-                $attributes[$name] = utf8_decode((string) $value);
-            }
+        // Tell libxml that the markup is UTF-8 encoded
+        $dom->loadHTML('<?xml encoding="UTF-8">'.$html, LIBXML_NOERROR | LIBXML_NOWARNING);
+
+        $attributes = [];
+        $link = $dom->getElementsByTagName('a')->item(0);
+
+        if (null === $link) {
+            return $attributes;
+        }
+
+        foreach ($link->attributes as $attr) {
+            $attributes[$attr->nodeName] = (string) $attr->nodeValue;
         }
 
         return $attributes;
@@ -120,10 +124,13 @@ class MenuBuilder
                 // Set defaults
                 $v['name'] = $globOp['name'];
                 $v['custom_glob_op_group'] = !isset($v['custom_glob_op_options']['add_to_menu_group']) || !\is_string($v['custom_glob_op_options']['add_to_menu_group']) ? 'default' : $v['custom_glob_op_options']['add_to_menu_group'];
-                $v['href'] = $globOp['href'];
+                $v['attributes'] = $this->getAttrFromHtml($globOp['html']);
+                $v['href'] = $v['attributes']['href'] ?? '';
                 $v['label'] = $globOp['label'];
                 $v['sorting'] = !isset($v['custom_glob_op_options']['sorting']) || !\is_int($v['custom_glob_op_options']['sorting']) ? $sorting : $v['custom_glob_op_options']['sorting'];
-                $v['attributes'] = $this->getAttrFromHtml($globOp['html']);
+
+                // The URI is set separately
+                unset($v['attributes']['href']);
 
                 if (!isset($this->arrMenus[$v['custom_glob_op_group']]) || !\is_array($this->arrMenus[$v['custom_glob_op_group']])) {
                     $this->arrMenus[$v['custom_glob_op_group']] = [];
