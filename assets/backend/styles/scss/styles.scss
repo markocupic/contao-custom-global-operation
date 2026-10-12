@@ -24,11 +24,27 @@
       margin-left: 0;
       display: block;
       text-align: left;
-      /*background-size: auto 16px;*/
-      background-position-x: .5rem;
+      // Contao 5.3 renders the icon as inline background-image
+      background-repeat: no-repeat;
+      background-position: .5rem center;
+      background-size: auto 16px;
       border: 1px solid transparent;
       border-radius: 2px;
       transition: background-color .25s ease-in-out;
+    }
+
+    // Contao 5.6+ renders the icon as <img> inside the link
+    .custom-glob-op-menu-item a:has(> img) {
+      display: flex;
+      align-items: center;
+      column-gap: .5rem;
+      padding-left: 10px;
+    }
+
+    .custom-glob-op-menu-item a > img {
+      flex: 0 0 auto;
+      width: auto;
+      height: 16px;
     }
 
     .custom-glob-op-menu-item a:hover {

@@ -1,3 +1,12 @@
 <div id="tl_custom_glob_op_nav_container" class="custom_glob_op_nav_container">
-    {{ menu|raw }}
+    {% for group, items in menus %}
+        <ul class="custom-glob-op-menu" data-name="{{ group }}">
+            {% for item in items %}
+                {# The link is rendered by Contao (attributes, icon and label) #}
+                <li{{ attrs().addClass('custom-glob-op-menu-item').addClass('first', loop.first).addClass('last', loop.last).set('data-name', item.name) }}>
+                    {{ item.html|raw }}
+                </li>
+            {% endfor %}
+        </ul>
+    {% endfor %}
 </div>

@@ -14,137 +14,46 @@ declare(strict_types=1);
 
 namespace Markocupic\ContaoCustomGlobalOperation\MenuBuilder;
 
-use Knp\Menu\Matcher\Matcher;
-use Knp\Menu\MenuFactory;
-use Knp\Menu\Renderer\ListRenderer;
-
+/**
+ * Groups the links of the custom global operations into menus.
+ */
 class MenuBuilder
 {
-    private ?string $strTable = null;
+    public const DEFAULT_GROUP = 'default';
 
-    private ?array $globOps = null;
-
-    private ?array $dca = null;
-
-    private ?array $arrMenus = null;
-
-    public function generateMenus(string $strTable, array $globOps, array $dca): string
+    /**
+     * @param array<string, mixed>  $dca   The DCA of the current table
+     * @param array<string, string> $links The rendered links (HTML), indexed by the operation name
+     *
+     * @return array<string, list<array{name: string, html: string, sorting: int}>> The menu items, indexed by the menu group
+     */
+    public function buildMenus(array $dca, array $links): array
     {
-        $this->strTable = $strTable;
-        $this->globOps = $globOps;
-        $this->dca = $dca;
-        $this->arrMenus = [];
-        $this->initialize();
+        $menus = [];
 
-        return $this->generate();
-    }
+        foreach ($links as $name => $html) {
+            $operation = $dca['list']['global_operations'][$name] ?? null;
 
-    public function getAttrFromHtml(string $html): array
-    {
-        $dom = new \DOMDocument();
-
-        // Tell libxml that the markup is UTF-8 encoded
-        $dom->loadHTML('<?xml encoding="UTF-8">'.$html, LIBXML_NOERROR | LIBXML_NOWARNING);
-
-        $attributes = [];
-        $link = $dom->getElementsByTagName('a')->item(0);
-
-        if (null === $link) {
-            return $attributes;
-        }
-
-        foreach ($link->attributes as $attr) {
-            $attributes[$attr->nodeName] = (string) $attr->nodeValue;
-        }
-
-        return $attributes;
-    }
-
-    private function generate(): string
-    {
-        $markup = '';
-
-        if (empty($this->arrMenus)) {
-            return $markup;
-        }
-
-        foreach ($this->arrMenus as $menuName => $arrMenuItems) {
-            $factory = new MenuFactory();
-            $menu = $factory->createItem('custom_global_operations_'.$menuName);
-            $menu->setChildrenAttribute('class', 'custom-glob-op-menu');
-            $menu->setChildrenAttribute('data-name', $menuName);
-
-            foreach ($arrMenuItems as $v) {
-                $arrClasses = [
-                    'custom-glob-op-menu-item',
-                ];
-
-                // Add link item
-                $menu
-                    ->addChild($v['name'], ['uri' => $v['href']])
-                    ->setLabel($v['label'])
-                ;
-
-                // Push css classes to the li-tag
-                $menu
-                    ->getChild($v['name'])
-                    ->setAttribute('class', implode(' ', $arrClasses))
-                ;
-
-                // Push original attributes to the link tag
-                if (!empty($v['attributes'])) {
-                    foreach ($v['attributes'] as $attrKey => $attrVal) {
-                        $menu
-                            ->getChild($v['name'])
-                            ->setLinkAttribute($attrKey, (string) $attrVal)
-                        ;
-                    }
-                }
+            if (!\is_array($operation)) {
+                continue;
             }
 
-            $renderer = new ListRenderer(new Matcher());
+            $options = $operation['custom_glob_op_options'] ?? [];
+            $group = \is_string($options['add_to_menu_group'] ?? null) ? $options['add_to_menu_group'] : self::DEFAULT_GROUP;
 
-            $markup .= $renderer->render($menu);
+            $menus[$group][] = [
+                'name' => (string) $name,
+                'html' => $html,
+                'sorting' => \is_int($options['sorting'] ?? null) ? $options['sorting'] : -1,
+            ];
         }
 
-        return $markup;
-    }
-
-    private function initialize(): void
-    {
-        foreach ($this->globOps as $globOp) {
-            $menuItem = $this->dca['list']['global_operations'][$globOp['name']] ?? null;
-
-            if (!empty($menuItem) && \is_array($menuItem)) {
-                $sorting = 0;
-
-                --$sorting;
-                $v = $menuItem;
-
-                // Set defaults
-                $v['name'] = $globOp['name'];
-                $v['custom_glob_op_group'] = !isset($v['custom_glob_op_options']['add_to_menu_group']) || !\is_string($v['custom_glob_op_options']['add_to_menu_group']) ? 'default' : $v['custom_glob_op_options']['add_to_menu_group'];
-                $v['attributes'] = $this->getAttrFromHtml($globOp['html']);
-                $v['href'] = $v['attributes']['href'] ?? '';
-                $v['label'] = $globOp['label'];
-                $v['sorting'] = !isset($v['custom_glob_op_options']['sorting']) || !\is_int($v['custom_glob_op_options']['sorting']) ? $sorting : $v['custom_glob_op_options']['sorting'];
-
-                // The URI is set separately
-                unset($v['attributes']['href']);
-
-                if (!isset($this->arrMenus[$v['custom_glob_op_group']]) || !\is_array($this->arrMenus[$v['custom_glob_op_group']])) {
-                    $this->arrMenus[$v['custom_glob_op_group']] = [];
-                }
-
-                $this->arrMenus[$v['custom_glob_op_group']][] = $v;
-
-                // Set the correct sorting order
-                foreach ($this->arrMenus as $key => $arrMenus) {
-                    $arrSorting = array_column($arrMenus, 'sorting');
-                    array_multisort($arrSorting, SORT_DESC, $arrMenus);
-                    $this->arrMenus[$key] = $arrMenus;
-                }
-            }
+        // Items with a higher sorting value come first
+        foreach ($menus as $group => $items) {
+            usort($items, static fn (array $a, array $b): int => $b['sorting'] <=> $a['sorting']);
+            $menus[$group] = $items;
         }
+
+        return $menus;
     }
 }

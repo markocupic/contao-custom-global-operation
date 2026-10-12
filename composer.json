@@ -22,9 +22,7 @@
     },
     "require": {
         "php": "^8.3",
-        "ext-dom": "*",
         "contao/core-bundle": "^5.3 || ^6.0",
-        "knplabs/knp-menu": "^3.1",
         "symfony/asset": "^6.4 || ^7.0 || ^8.0",
         "symfony/config": "^6.4 || ^7.0 || ^8.0",
         "symfony/dependency-injection": "^6.4 || ^7.0 || ^8.0",
